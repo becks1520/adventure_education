@@ -1,0 +1,18 @@
+{
+  "judul": "Kuis Matematika Dasar",
+  "mapel": "Matematika",
+  "soal": [
+    {
+      "pertanyaan": "Berapakah hasil dari 15 x 4?",
+      "opsi": ["50", "60", "65", "70"],
+      "jawaban": 1,
+      "pembahasan": "15 dikali 4 sama dengan 60."
+    },
+    {
+      "pertanyaan": "Berapakah hasil dari 100 - 37?",
+      "opsi": ["63", "67", "73", "53"],
+      "jawaban": 0,
+      "pembahasan": "100 dikurangi 37 adalah 63."
+    }
+  ]
+}
