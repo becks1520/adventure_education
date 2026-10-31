@@ -1,5 +1,15 @@
 # Panduan Membuat & Memasukkan Soal
 
+## Cara termudah: menu "📥 Soal" di dalam game (Excel / CSV)
+1. Klik **📥 Soal** di pojok kanan atas game, lalu **Unduh template Excel**.
+2. Buka di Excel. Isi satu soal per baris: **Mapel, Tingkat (1/2/3), Pertanyaan, A, B, C, D, Jawaban (huruf), Pembahasan**.
+   Nama mapel boleh singkat (mis. `Matematika`, `IPA`, `Bahasa Inggris`, `PJOK`, `Seni`). Sheet "Petunjuk" di template menjelaskan semuanya.
+3. Simpan, lalu klik **Pilih file** di menu yang sama. Game melaporkan berapa soal masuk dan baris mana yang salah.
+- Soal yang diunggah **tersimpan di browser perangkat itu saja**. Supaya semua pemain mendapat soal yang sama, salin soalnya ke `data/soal.js` (cara di bawah) dan unggah ulang ke GitHub.
+- File Word (.docx) belum didukung; salin tabelnya ke Excel dulu. Kalau Excel tidak terbaca, simpan sebagai **CSV** lalu unggah.
+
+## Cara permanen: edit `data/soal.js`
+
 Semua soal ada di `data/soal.js`. Satu soal = satu baris:
 
 ```js
