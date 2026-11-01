@@ -8,7 +8,9 @@ Jelajahi peta 3D, masuk ke gedung, lalu jawab kuis. Tiap gedung = satu mata pela
 
 ## Kontrol
 - Komputer: **W A S D** / tombol panah = jalan, **E** = masuk gedung, **Esc** = tutup kuis, **1-4** atau **A-D** = pilih jawaban.
-- HP / tablet: tombol arah di layar, ketuk kotak kuning untuk masuk gedung.
+- HP / tablet: joystik bulat di kiri bawah (makin jauh digeser, makin cepat), ketuk kotak kuning untuk masuk gedung.
+- Menu **☰** (kanan atas): Misi, Karakter, Unggah Soal, Tingkat, Suara, Kembali ke taman, dan **Pengaturan & reset**.
+- Progres tersimpan otomatis di browser. Jika setelah upload ke GitHub tampilan masih lama: buka alamat game dengan tambahan `?v=4` di belakangnya, atau tekan Ctrl+F5.
 
 ## Menambah / mengubah soal
 Edit `data/soal.js`. Tiap gedung punya `nama`, `ikon`, `warna`, posisi `x`/`z`, dan daftar `soal`.

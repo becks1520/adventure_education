@@ -1,7 +1,7 @@
 # Panduan Membuat & Memasukkan Soal
 
 ## Cara termudah: menu "📥 Soal" di dalam game (Excel / CSV)
-1. Klik **📥 Soal** di pojok kanan atas game, lalu **Unduh template Excel**.
+1. Buka menu **☰** di pojok kanan atas game, pilih **📥 Soal (unggah Excel)**, lalu **Unduh template Excel**.
 2. Buka di Excel. Isi satu soal per baris: **Mapel, Tingkat (1/2/3), Pertanyaan, A, B, C, D, Jawaban (huruf), Pembahasan**.
    Nama mapel boleh singkat (mis. `Matematika`, `IPA`, `Bahasa Inggris`, `PJOK`, `Seni`). Sheet "Petunjuk" di template menjelaskan semuanya.
 3. Simpan, lalu klik **Pilih file** di menu yang sama. Game melaporkan berapa soal masuk dan baris mana yang salah.

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Game Edukasi 3D</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
     <canvas id="game-canvas"></canvas>
@@ -13,27 +13,27 @@
     <div id="hud">
         <div class="card" id="hud-kontrol"></div>
         <div class="card" id="hud-status">
-            <span id="hud-skor">⭐ Skor: 0</span>
-            <span id="hud-gedung">🏫 Gedung: 0/0</span>
+            <span id="hud-skor">⭐ 0</span>
             <span id="hud-koin">🪙 0</span>
-            <button id="btn-misi" class="tombol-hud" type="button">📋 Misi</button>
-            <button id="btn-karakter" class="tombol-hud" type="button">👕 Karakter</button>
-            <button id="btn-unggah" class="tombol-hud" type="button">📥 Soal</button>
-            <button id="btn-level" class="tombol-hud" type="button"></button>
-            <button id="btn-suara" class="tombol-hud" type="button" aria-label="Suara"></button>
+            <span id="hud-gedung">🏫 0/0</span>
         </div>
+        <button id="btn-menu" class="card tombol-menu" type="button" aria-label="Menu">☰</button>
+    </div>
+    <div id="menu-tombol">
+        <button id="btn-misi" class="tombol-hud" type="button">📋 Misi</button>
+        <button id="btn-karakter" class="tombol-hud" type="button">👕 Karakter</button>
+        <button id="btn-unggah" class="tombol-hud" type="button">📥 Soal (unggah Excel)</button>
+        <button id="btn-level" class="tombol-hud" type="button"></button>
+        <button id="btn-suara" class="tombol-hud" type="button"></button>
+        <button id="btn-titik" class="tombol-hud" type="button">📍 Kembali ke taman</button>
+        <button id="btn-sistem" class="tombol-hud" type="button">⚙️ Pengaturan &amp; reset</button>
     </div>
 
     <!-- Petunjuk saat dekat gedung (bisa diklik / diketuk) -->
     <button id="prompt-interaksi" class="card prompt-hidden" type="button"></button>
 
-    <!-- Tombol arah untuk layar sentuh (HP / tablet) -->
-    <div id="dpad" aria-label="Tombol arah">
-        <button type="button" data-dir="up"    aria-label="Maju">▲</button>
-        <button type="button" data-dir="left"  aria-label="Kiri">◀</button>
-        <button type="button" data-dir="right" aria-label="Kanan">▶</button>
-        <button type="button" data-dir="down"  aria-label="Mundur">▼</button>
-    </div>
+    <!-- Joystik bulat untuk layar sentuh (HP / tablet) -->
+    <div id="joystick" aria-label="Joystik"><div id="joy-kenop"></div></div>
 
     <!-- Modal Kuis -->
     <div id="modal-kuis" class="modal-hidden" role="dialog" aria-modal="true" aria-labelledby="kuis-judul">
@@ -98,7 +98,7 @@
 
     <!-- Pembaca Excel untuk menu Unggah Soal (opsional; tanpa ini tetap bisa CSV) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="data/soal.js"></script>
-    <script src="main.js"></script>
+    <script src="data/soal.js?v=4"></script>
+    <script src="main.js?v=4"></script>
 </body>
 </html>
