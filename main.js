@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    const VERSI = '4.0';
+    const VERSI = '5.0';
     console.info('Game Edukasi 3D versi ' + VERSI);
 
     const $ = (id) => document.getElementById(id);
@@ -82,11 +82,17 @@
 
     // ---------- 3. LINGKUNGAN ----------
     const BATAS = 52;            // batas area bermain (±)
+    // 12 slot gedung pada kota pola kisi (grid): tiap gedung menghadap jalan ke arah taman di tengah
+    const SLOT_GEDUNG = [
+        [0, 22.5, 0, -1], [22.8, 22.5, 0, -1], [33.2, 22.5, 0, -1], [22.5, 0, -1, 0], [22.8, -22.5, 0, 1], [33.2, -22.5, 0, 1],
+        [0, -22.5, 0, 1], [-22.8, -22.5, 0, 1], [-33.2, -22.5, 0, 1], [-22.5, 0, 1, 0], [-22.8, 22.5, 0, -1], [-33.2, 22.5, 0, -1]
+    ].map((v) => ({ x: v[0], z: v[1], dx: v[2], dz: v[3], rot: Math.atan2(v[2], v[3]) }));
+    if (DATA_SOAL.gedung.length > SLOT_GEDUNG.length) {
+        console.warn('Peta hanya memuat ' + SLOT_GEDUNG.length + ' gedung; gedung ke-' + (SLOT_GEDUNG.length + 1) + ' dan seterusnya diabaikan.');
+        DATA_SOAL.gedung.length = SLOT_GEDUNG.length;
+    }
     const JUMLAH = DATA_SOAL.gedung.length;
     const TAU = Math.PI * 2;
-    const R_GEDUNG = 36;         // gedung melingkar mengelilingi taman
-    const R_JALAN = 24;          // jalan raya melingkar
-    const sudut = (i) => i * TAU / JUMLAH;
 
     let seed = 20260;
     const acakTetap = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -126,46 +132,54 @@
     }
     const putih = 0xf8fafc, emas = 0xf5c542;
 
-    // --- tanah, taman, jalan raya radial sentral (jaring laba-laba ala Paris) ---
+    // --- tanah, taman, jalan kota POLA KISI (grid): 4 jalan ke tiap arah = 16 persimpangan ---
     const tanah = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), bahan(0x3fb56b));
     tanah.rotation.x = -Math.PI / 2; tanah.receiveShadow = true; scene.add(tanah);
 
-    const aspal = 0x374151, kuning = 0xfacc15;
-    const R_BUNDARAN = 18.5, R_CINCIN1 = 28, R_CINCIN2 = 44;       // bundaran pusat + dua jalan lingkar
-    const sudutJalan = (i) => sudut(i) + Math.PI / JUMLAH;          // jalan raya radial di antara dua gedung
-    const selisihSudut = (a, b) => (((a - b) % TAU) + TAU + Math.PI) % TAU - Math.PI;
+    const GARIS = [-42, -14, 14, 42];               // sumbu jalan (sama untuk arah x dan z)
+    const LEBAR = 6, aspal = 0x374151, kuning = 0xfacc15;
+    const PUSAT_BLOK = [-28, 0, 28];
+    const BLOK = [];                                // 9 blok kota 22×22; blok tengah = taman
+    PUSAT_BLOK.forEach((bx) => PUSAT_BLOK.forEach((bz) => BLOK.push({ x: bx, z: bz })));
 
-    datar(new THREE.CircleGeometry(15, 48), 0xd9d6cf, 0.03);        // plaza taman
-    datar(new THREE.RingGeometry(5.4, 6.8, 48), 0x2f9e4f, 0.045);   // bedeng bunga
+    function buatMarka(warna, daftar, y) {          // ratusan garis datar digambar sekali (InstancedMesh) agar ringan di HP
+        const geo = new THREE.PlaneGeometry(1, 1); geo.rotateX(-Math.PI / 2);
+        const im = new THREE.InstancedMesh(geo, pakaiBahan(warna), daftar.length);
+        const m4 = new THREE.Matrix4();
+        daftar.forEach((d, i) => { m4.makeScale(d[2], 1, d[3]); m4.setPosition(d[0], y, d[1]); im.setMatrixAt(i, m4); });
+        im.instanceMatrix.needsUpdate = true; im.frustumCulled = false; im.receiveShadow = true;
+        scene.add(im);
+    }
+    GARIS.forEach((g) => {                          // aspal
+        datarDi(scene, 2 * BATAS, LEBAR, aspal, 0.04, g, 0);
+        datarDi(scene, LEBAR, 2 * BATAS, aspal, 0.04, 0, g);
+    });
+    datar(new THREE.CircleGeometry(10.5, 48), 0xd9d6cf, 0.03);        // plaza taman di blok tengah
+    datar(new THREE.RingGeometry(5.4, 6.8, 48), 0x2f9e4f, 0.045);     // bedeng bunga
 
-    function jalanCincin(r, lebar) {
-        datar(new THREE.RingGeometry(r - lebar / 2, r + lebar / 2, 128), aspal, 0.04);
-        datar(new THREE.RingGeometry(r - lebar / 2 + 0.2, r - lebar / 2 + 0.4, 128), putih, 0.055);   // marka tepi
-        datar(new THREE.RingGeometry(r + lebar / 2 - 0.4, r + lebar / 2 - 0.2, 128), putih, 0.055);
-        const n = Math.round(r * TAU / 4.2);                                                          // marka tengah putus-putus
-        for (let i = 0; i < n; i++) {
-            const a = i * TAU / n;
-            let dekat = false;
-            for (let j = 0; j < JUMLAH; j++) if (Math.abs(selisihSudut(a, sudutJalan(j))) < 3.6 / r + 0.03) dekat = true;
-            if (!dekat) datarDi(kutub(a), 1.8, 0.2, kuning, 0.06, r);
+    const putus = [], tepi = [], zebra = [], trotoar = [];
+    const dekatSimpang = (t, jarak) => GARIS.some((g) => Math.abs(t - g) < jarak);
+    const potong = [-BATAS];
+    GARIS.forEach((g) => potong.push(g - 3.3, g + 3.3));
+    potong.push(BATAS);
+    GARIS.forEach((g) => {
+        for (let t = -BATAS + 2; t < BATAS - 1; t += 4) if (!dekatSimpang(t, 4.4)) { putus.push([t, g, 1.8, 0.2]); putus.push([g, t, 0.2, 1.8]); }
+        for (let k = 0; k < potong.length; k += 2) {
+            const a = potong[k], b = potong[k + 1], len = b - a, mid = (a + b) / 2;
+            [-2.7, 2.7].forEach((o) => { tepi.push([mid, g + o, len, 0.2]); tepi.push([g + o, mid, 0.2, len]); });
         }
-    }
-    jalanCincin(R_BUNDARAN, 6);
-    jalanCincin(R_CINCIN1, 5);
-    jalanCincin(R_CINCIN2, 5);
-
-    const RUAS = [[R_BUNDARAN + 3, R_CINCIN1 - 2.5], [R_CINCIN1 + 2.5, R_CINCIN2 - 2.5], [R_CINCIN2 + 2.5, BATAS]];
-    for (let i = 0; i < JUMLAH; i++) {                               // jalan raya yang memancar dari bundaran
-        const k = kutub(sudutJalan(i));
-        datarDi(k, 6, BATAS - 19, aspal, 0.04, (BATAS + 19) / 2);
-        RUAS.forEach((sg) => {
-            const panjang = sg[1] - sg[0], tengah = (sg[0] + sg[1]) / 2;
-            [-2.7, 2.7].forEach((x) => datarDi(k, 0.2, panjang, putih, 0.055, tengah, x));
-            for (let r = sg[0] + 1; r < sg[1] - 1; r += 3) datarDi(k, 0.2, 1.4, kuning, 0.06, r);
-        });
-        for (let x = -2.5; x <= 2.5; x += 1) datarDi(k, 0.5, 2, putih, 0.065, R_BUNDARAN + 5.2, x);   // zebra cross
-        datarDi(kutub(sudut(i)), 3.4, 1.4, 0xe0d2a8, 0.05, 31.3);    // trotoar di depan pintu gedung
-    }
+    });
+    GARIS.forEach((X) => GARIS.forEach((Z) => {      // zebra cross di keempat lengan tiap persimpangan
+        for (let o = -2.5; o <= 2.5; o += 1) {
+            zebra.push([X + 4.6, Z + o, 1.8, 0.5], [X - 4.6, Z + o, 1.8, 0.5], [X + o, Z + 4.6, 0.5, 1.8], [X + o, Z - 4.6, 0.5, 1.8]);
+        }
+    }));
+    BLOK.forEach((b) => {                            // trotoar mengelilingi tiap blok
+        trotoar.push([b.x, b.z + 10.4, 22, 1.2], [b.x, b.z - 10.4, 22, 1.2], [b.x + 10.4, b.z, 1.2, 22], [b.x - 10.4, b.z, 1.2, 22]);
+    });
+    buatMarka(0xd8d4cc, trotoar, 0.045);
+    buatMarka(putih, tepi.concat(zebra), 0.06);
+    buatMarka(kuning, putus, 0.065);
 
     // --- orang berbentuk balok (gaya Minecraft) ---
     const KULIT = bahan(0xd9a37a);
@@ -285,11 +299,11 @@
     };
     const penghalang = [{ x: 0, z: 0, r: 3.8 }];   // lingkaran yang tidak bisa ditembus (air mancur & gedung)
     const daftarGedung = DATA_SOAL.gedung.map((data, i) => {
-        const a = sudut(i);
+        const sl = SLOT_GEDUNG[i];
         const warna = new THREE.Color(data.warna);
         const grp = new THREE.Group();
-        grp.position.set(Math.sin(a) * R_GEDUNG, 0, Math.cos(a) * R_GEDUNG);
-        grp.rotation.y = a + Math.PI;                         // pintu menghadap pusat taman
+        grp.position.set(sl.x, 0, sl.z);
+        grp.rotation.y = sl.rot;                              // pintu menghadap jalan ke arah taman
         const bahanBadan = new THREE.MeshStandardMaterial({ color: warna });
         const gelap = new THREE.MeshStandardMaterial({ color: warna.clone().multiplyScalar(0.6) });
         kotak(grp, 8, 7, 8, bahanBadan, 0, 3.5, 0);
@@ -328,7 +342,7 @@
     }
     function buatBangku(a) {
         const b = new THREE.Group();
-        b.position.set(Math.sin(a) * 9, 0, Math.cos(a) * 9);
+        b.position.set(Math.sin(a) * 8.6, 0, Math.cos(a) * 8.6);
         b.rotation.y = a + Math.PI;                           // menghadap air mancur
         kotak(b, 2.2, 0.15, 0.7, 0x8b5a2b, 0, 0.55, 0);
         kotak(b, 2.2, 0.7, 0.12, 0x8b5a2b, 0, 0.95, -0.33);
@@ -337,13 +351,14 @@
     }
     const bahanLampu = new THREE.MeshStandardMaterial({ color: 0xfff3b0, emissive: 0xffe08a, emissiveIntensity: 0.8 });
     function buatLampu(a) {
-        const x = Math.sin(a) * 12.5, z = Math.cos(a) * 12.5;
+        const x = Math.sin(a) * 9.8, z = Math.cos(a) * 9.8;
         tabung(scene, 0.08, 0.1, 3.6, 0x374151, x, 1.8, z, 8);
         bola(scene, 0.3, bahanLampu, x, 3.7, z);
     }
     for (let k = 0; k < 6; k++) { buatBangku((15 + 60 * k) * Math.PI / 180); buatLampu((45 + 60 * k) * Math.PI / 180); }
 
     // --- pohon ---
+    const posPohon = [];
     const geoBatang = new THREE.CylinderGeometry(0.3, 0.4, 2, 8);
     const geoDaun = new THREE.ConeGeometry(1.6, 3.2, 8);
     function buatPohon(x, z, s) {
@@ -352,19 +367,23 @@
         const daun = new THREE.Mesh(geoDaun, bahan(0x1f8f4a)); daun.position.y = 3.4;
         batang.castShadow = true; daun.castShadow = true;
         p.add(batang, daun); p.scale.set(s, s, s); p.position.set(x, 0, z); scene.add(p);
+        posPohon.push({ x: x, z: z });
     }
-    const sudutAman = (a) => { const d = ((a * 180 / Math.PI) % 15 + 15) % 15; return d > 4 && d < 11; };  // jauhi jalur, bangku, lampu
-    for (let n = 0, coba = 0; n < 60 && coba < 900; coba++) {
-        const a = acakTetap() * TAU, dalam = n < 20;
-        const r = dalam ? 13 + acakTetap() * 1.6 : 49 + acakTetap() * 7;
-        if (dalam && !sudutAman(a)) continue;
-        buatPohon(Math.sin(a) * r, Math.cos(a) * r, 0.8 + acakTetap() * 0.7);
-        n++;
+    BLOK.forEach((b) => {
+        if (b.x === 0 && b.z === 0) return;                      // blok tengah = taman
+        for (let n = 0, coba = 0; n < 8 && coba < 150; coba++) {
+            const x = b.x + (acakTetap() * 2 - 1) * 9, z = b.z + (acakTetap() * 2 - 1) * 9;
+            if (daftarGedung.some((g) => Math.hypot(x - g.x, z - g.z) < 7.5)) continue;
+            buatPohon(x, z, 0.8 + acakTetap() * 0.6); n++;
+        }
+    });
+    [[-9.5, -9.5], [9.5, -9.5], [-9.5, 9.5], [9.5, 9.5]].forEach((p) => buatPohon(p[0], p[1], 0.9));   // sudut taman
+    for (let i = 0; i < 44; i++) {                                // pohon di tepi luar kota
+        const t = (acakTetap() * 2 - 1) * 54, d = 47.5 + acakTetap() * 6.5, sk = i % 4;
+        buatPohon(sk === 0 ? t : sk === 1 ? t : sk === 2 ? d : -d, sk === 0 ? d : sk === 1 ? -d : t, 0.8 + acakTetap() * 0.7);
     }
 
-    for (let i = 0; i < JUMLAH; i++) buatPohon(Math.sin(sudut(i)) * 23.5, Math.cos(sudut(i)) * 23.5, 0.75);   // pohon di blok antar jalan
-
-    // --- mobil melintas di bundaran & jalan lingkar, pejalan kaki di taman ---
+    // --- mobil menyusuri jalan kota (belok di tiap sudut blok), pejalan kaki di taman ---
     function buatMobil(warna) {
         const m = new THREE.Group();
         kotak(m, 1.4, 0.55, 2.8, warna, 0, 0.6, 0);
@@ -374,9 +393,18 @@
         scene.add(m); return m;
     }
     const mobilList = [];
-    const WARNA_MOBIL = [0xef4444, 0xfacc15, 0x3b82f6, 0xf8fafc, 0x22c55e, 0xf97316];
-    [[R_BUNDARAN, 1, 2, 6], [R_CINCIN1 - 1.3, 1, 2, 8], [R_CINCIN1 + 1.3, -1, 2, 8], [R_CINCIN2 - 1.3, 1, 2, 9], [R_CINCIN2 + 1.3, -1, 2, 9]].forEach((j, ji) => {
-        for (let n = 0; n < j[2]; n++) mobilList.push({ grup: buatMobil(WARNA_MOBIL[(ji * 2 + n) % 6]), a: n * TAU / j[2] + ji, arah: j[1], r: j[0], v: j[3] });
+    const WARNA_MOBIL = [0xef4444, 0xfacc15, 0x3b82f6, 0xf8fafc, 0x22c55e, 0xf97316, 0x8b5cf6, 0x14b8a6];
+    function tambahMobil(x0, x1, z0, z1, arah, v, warna, fase) {   // lintasan = persegi panjang mengikuti lajur jalan
+        const per = 2 * ((x1 - x0) + (z1 - z0));
+        mobilList.push({ grup: buatMobil(warna), x0: x0, x1: x1, z0: z0, z1: z1, per: per, s: fase * per, arah: arah, v: v, h: 0, siap: false });
+    }
+    tambahMobil(-12.5, 12.5, -12.5, 12.5, 1, 7, WARNA_MOBIL[0], 0);            // mengelilingi taman
+    tambahMobil(-15.5, 15.5, -15.5, 15.5, -1, 7, WARNA_MOBIL[1], 0.5);
+    tambahMobil(-43.5, 43.5, -43.5, 43.5, 1, 9, WARNA_MOBIL[2], 0);            // jalan lingkar luar kota
+    tambahMobil(-43.5, 43.5, -43.5, 43.5, 1, 9, WARNA_MOBIL[3], 0.5);
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach((q, i) => {                  // mengelilingi tiap blok sudut
+        const xa = q[0] * 15.5, xb = q[0] * 40.5, za = q[1] * 15.5, zb = q[1] * 40.5;
+        tambahMobil(Math.min(xa, xb), Math.max(xa, xb), Math.min(za, zb), Math.max(za, zb), 1, 8, WARNA_MOBIL[4 + i], i * 0.25);
     });
     const pejalan = [];
     for (let i = 0; i < 6; i++) {
@@ -384,7 +412,7 @@
             new THREE.MeshStandardMaterial({ color: [0xf97316, 0x16a34a, 0xdb2777, 0x7c3aed, 0xeab308, 0x0ea5e9][i] }),
             [0x2b1b0f, 0xb45309, 0x111111, 0x6b3e1f, 0x1f2937, 0xd4a017][i], 0x374151);
         scene.add(m.grup);
-        pejalan.push({ m: m, a: i * TAU / 6, arah: i % 2 ? -1 : 1, r: 10.4 + (i % 3) * 0.5, w: 0.1 + (i % 3) * 0.02, fase: i });
+        pejalan.push({ m: m, a: i * TAU / 6, arah: i % 2 ? -1 : 1, r: 7.4 + (i % 3) * 0.3, w: 0.1 + (i % 3) * 0.02, fase: i });
     }
 
     // --- animasi dunia: air mancur, mobil, pejalan ---
@@ -396,9 +424,21 @@
             p.mesh.position.set(Math.sin(p.phi) * rad, 2.7 * (1 - u) + 0.7 * u + 6.4 * u * (1 - u), Math.cos(p.phi) * rad);
         });
         mobilList.forEach((c) => {
-            c.a += c.arah * c.v / c.r * dt;
-            c.grup.position.set(Math.sin(c.a) * c.r, 0, Math.cos(c.a) * c.r);
-            c.grup.rotation.y = c.a + c.arah * Math.PI / 2;
+            c.s = (c.s + c.arah * c.v * dt + c.per) % c.per;
+            const w = c.x1 - c.x0, h = c.z1 - c.z0;
+            let x, z, dx, dz;
+            if (c.s < w) { x = c.x0 + c.s; z = c.z0; dx = 1; dz = 0; }
+            else if (c.s < w + h) { x = c.x1; z = c.z0 + (c.s - w); dx = 0; dz = 1; }
+            else if (c.s < 2 * w + h) { x = c.x1 - (c.s - w - h); z = c.z1; dx = -1; dz = 0; }
+            else { x = c.x0; z = c.z1 - (c.s - 2 * w - h); dx = 0; dz = -1; }
+            const tujuan = Math.atan2(dx * c.arah, dz * c.arah);
+            if (!c.siap) { c.h = tujuan; c.siap = true; }
+            let d = tujuan - c.h;
+            while (d > Math.PI) d -= TAU;
+            while (d < -Math.PI) d += TAU;
+            c.h += d * Math.min(1, dt * 8);
+            c.grup.position.set(x, 0, z);
+            c.grup.rotation.y = c.h;
         });
         pejalan.forEach((p) => {
             p.a += p.arah * p.w * dt;
@@ -430,11 +470,12 @@
     const koinList = [];
     const geoKoin = new THREE.CylinderGeometry(0.45, 0.45, 0.1, 20);
     const bahanKoin = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xb45309, emissiveIntensity: 0.4, metalness: 0.5, roughness: 0.4 });
-    const JUMLAH_KOIN = 140;               // tersebar di seluruh area permainan
+    const JUMLAH_KOIN = 160;               // tersebar di seluruh area permainan
     for (let n = 0, coba = 0; n < JUMLAH_KOIN && coba < 8000; coba++) {
         const x = (acakTetap() * 2 - 1) * (BATAS - 2);
         const z = (acakTetap() * 2 - 1) * (BATAS - 2);
-        if (Math.hypot(x, z) > BATAS - 1 || Math.hypot(x, z - 9) < 3 || Math.hypot(x, z) < 5 || !daftarGedung.every((g) => Math.hypot(x - g.x, z - g.z) > 7)
+        if (Math.abs(x) > BATAS - 1.5 || Math.abs(z) > BATAS - 1.5 || Math.hypot(x, z - 9) < 3 || Math.hypot(x, z) < 5 || !daftarGedung.every((g) => Math.hypot(x - g.x, z - g.z) > 7)
+            || posPohon.some((t) => Math.hypot(x - t.x, z - t.z) < 1.9)
             || koinList.some((q) => Math.hypot(x - q.position.x, z - q.position.z) < 4.5)) continue;
         const k = new THREE.Group();
         const piringan = new THREE.Mesh(geoKoin, bahanKoin);
@@ -449,9 +490,9 @@
 
     // NPC penjaga di depan tiap gedung
     const npcList = daftarGedung.map((g, i) => {
-        const a = sudut(i), r = R_GEDUNG - 6.6;
+        const sl = SLOT_GEDUNG[i];
         const m = buatManusia(new THREE.MeshStandardMaterial({ color: g.warna }), 0x2b1b0f, 0x374151);
-        m.grup.position.set(r * Math.sin(a) + 3 * Math.cos(a), 0, r * Math.cos(a) - 3 * Math.sin(a));
+        m.grup.position.set(g.x + sl.dx * 4.9 - sl.dz * 3, 0, g.z + sl.dz * 4.9 + sl.dx * 3);
         scene.add(m.grup);
         return m.grup;
     });
@@ -468,7 +509,7 @@
     // ---------- 5. INPUT ----------
     const keys = Object.create(null);
     const joy = { aktif: false, x: 0, z: 0, id: null };
-    const TOMBOL_GERAK = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+    const TOMBOL_GERAK = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'q', 'r'];
 
     function resetInput() {
         Object.keys(keys).forEach((k) => { keys[k] = false; });
@@ -530,12 +571,28 @@
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => joyEl.addEventListener(t, joyLepas));
     joyEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
+    // Putar kamera: geser (mouse/jari) di area permainan; roda mouse = zoom
+    let seret = null;
+    canvas.addEventListener('pointerdown', (e) => {
+        if (isKuisOpen) return;
+        seret = { id: e.pointerId, x: e.clientX, y: e.clientY };
+        try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* abaikan */ }
+    });
+    canvas.addEventListener('pointermove', (e) => {
+        if (!seret || e.pointerId !== seret.id) return;
+        kameraYaw -= (e.clientX - seret.x) * 0.008;
+        kameraPitch = Math.max(0.2, Math.min(1.3, kameraPitch + (e.clientY - seret.y) * 0.006));
+        seret.x = e.clientX; seret.y = e.clientY;
+    });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => canvas.addEventListener(t, (e) => { if (seret && e.pointerId === seret.id) seret = null; }));
+    canvas.addEventListener('wheel', (e) => { e.preventDefault(); kameraJarak = Math.max(7, Math.min(24, kameraJarak + e.deltaY * 0.01)); }, { passive: false });
+
     // ---------- 6. HUD ----------
     const KUNCI = 'ge3d-v2';
     const TINGKAT = { 1: { pendek: 'Anak', nama: 'Anak (PAUD–SD)', ikon: '🧒' },
                       2: { pendek: 'Pelajar', nama: 'Pelajar (SMP–SMA)', ikon: '🧑‍🎓' },
                       3: { pendek: 'Umum', nama: 'Umum / Dewasa', ikon: '🧑' } };
-    const simpan = { skor: 0, selesai: [], level: 0, suara: true, koin: 0, koinPeta: 0, misiSelesai: [], punya: [0], warna: 0 };
+    const simpan = { skor: 0, selesai: [], level: 0, suara: true, koin: 0, koinPeta: 0, misiSelesai: [], punya: [0], warna: 0, kamera: false };
     try { Object.assign(simpan, JSON.parse(localStorage.getItem(KUNCI) || '{}')); } catch (_) { /* abaikan */ }
     function tulis() { try { localStorage.setItem(KUNCI, JSON.stringify(simpan)); } catch (_) { /* abaikan */ } }
 
@@ -602,8 +659,8 @@
     if (!WARNA[simpan.warna]) simpan.warna = 0;
     bahanBaju.color.setHex(WARNA[simpan.warna].h);
     $('hud-kontrol').innerHTML = isTouch
-        ? '🎮 <b>Kontrol:</b> pakai tombol arah di layar'
-        : '🎮 <b>Kontrol:</b> <b>W A S D</b> / <b>Panah</b> = jalan · <b>E</b> = masuk gedung';
+        ? '🎮 joystik = jalan · geser layar = putar kamera'
+        : '🎮 <b>W A S D</b> / <b>Panah</b> jalan · <b>E</b> masuk gedung · <b>geser mouse</b> atau <b>Q / R</b> putar kamera';
 
     function updateHud() {
         periksaMisi();
@@ -847,6 +904,7 @@
     const menuTombol = $('menu-tombol');
     $('btn-menu').addEventListener('click', () => { if (menuTombol.classList.contains('buka')) menuTombol.classList.remove('buka'); else menuTombol.classList.add('buka'); });
     menuTombol.addEventListener('click', () => menuTombol.classList.remove('buka'));
+    $('btn-kamera').addEventListener('click', () => { kameraYaw = putar + Math.PI; kameraPitch = 0.6; kameraJarak = 15.8; });
     $('btn-titik').addEventListener('click', () => { player.position.set(0, 0, 9); vx = 0; vz = 0; });
 
     function muatTerbaru() {
@@ -1082,6 +1140,7 @@
     let vx = 0, vz = 0;        // kecepatan saat ini (dihaluskan)
     let putar = 0, jalanT = 0, napasT = 0;
     let kameraSiap = false;
+    let kameraYaw = 0, kameraPitch = 0.6, kameraJarak = 15.8;    // kamera mengorbit karakter (360°)
 
     function update(dt) {
         let mx = 0, mz = 0, skala = 1;
@@ -1093,7 +1152,12 @@
             if (joy.aktif) { mx = joy.x; mz = joy.z; skala = Math.min(1, Math.hypot(mx, mz)); }
         }
         const ingin = (mx !== 0 || mz !== 0);
-        if (ingin) { const len = Math.hypot(mx, mz); mx /= len; mz /= len; }
+        if (ingin) {
+            const len = Math.hypot(mx, mz); mx /= len; mz /= len;
+            const cs = Math.cos(kameraYaw), sn = Math.sin(kameraYaw);          // arah gerak mengikuti arah pandang kamera
+            const wx = mx * cs + mz * sn, wz = -mx * sn + mz * cs;
+            mx = wx; mz = wz;
+        }
 
         // Percepatan / perlambatan halus menuju kecepatan target
         const f = 1 - Math.exp(-(ingin ? PERCEPATAN : PERLAMBATAN) * dt);
@@ -1144,18 +1208,27 @@
         player.position.y = Math.abs(Math.sin(jalanT)) * 0.09 * rasio;                         // langkah naik-turun
         badanAtas.scale.y = 1 + Math.sin(napasT) * 0.012 * (1 - rasio);                        // bernapas saat diam
 
-        // Kamera mengikuti dengan halus
-        const tx = player.position.x, tz = player.position.z + 13;
+        // Kamera orbit 360° mengelilingi karakter
+        if (keys.q) kameraYaw += 1.8 * dt;
+        if (keys.r) kameraYaw -= 1.8 * dt;
+        let tx = 0, ty = 0, tz = 0;
+        for (let f = 1; f >= 0.3; f -= 0.1) {                                   // dekatkan kamera jika terhalang gedung
+            const j = kameraJarak * f;
+            tx = player.position.x + Math.sin(kameraYaw) * Math.cos(kameraPitch) * j;
+            ty = 1.2 + Math.sin(kameraPitch) * j;
+            tz = player.position.z + Math.cos(kameraYaw) * Math.cos(kameraPitch) * j;
+            if (!penghalang.some((o, k) => k > 0 && Math.hypot(tx - o.x, tz - o.z) < o.r + 0.6 && ty < 9.5)) break;
+        }
         if (!kameraSiap) {
-            camera.position.set(tx, 9, tz);
+            camera.position.set(tx, ty, tz);
             kameraSiap = true;
         } else {
-            const f = 1 - Math.exp(-6 * dt);
-            camera.position.x += (tx - camera.position.x) * f;
-            camera.position.y += (9 - camera.position.y) * f;
-            camera.position.z += (tz - camera.position.z) * f;
+            const f2 = 1 - Math.exp(-9 * dt);
+            camera.position.x += (tx - camera.position.x) * f2;
+            camera.position.y += (ty - camera.position.y) * f2;
+            camera.position.z += (tz - camera.position.z) * f2;
         }
-        camera.lookAt(player.position.x, 1.2, player.position.z - 2);
+        camera.lookAt(player.position.x - Math.sin(kameraYaw) * 2, 1.2, player.position.z - Math.cos(kameraYaw) * 2);
 
         animasiDunia(dt);
 
@@ -1205,6 +1278,7 @@
 
     updateHud();
     if (soalDilewati) toast('⚠️ ' + soalDilewati + ' soal dilewati karena salah format (lihat Console)');
+    if (!simpan.kamera) { toast(isTouch ? '👆 Geser layar untuk memutar kamera 360°' : '🖱️ Tahan & geser mouse (atau tombol Q / R) untuk memutar kamera'); simpan.kamera = true; tulis(); }
     if (!simpan.level) bukaLevel();
     loop();
 })();

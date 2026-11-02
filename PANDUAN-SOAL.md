@@ -20,7 +20,8 @@ S(tingkat, "Pertanyaan?", ["Opsi A", "Opsi B", "Opsi C", "Opsi D"], nomorJawaban
 - **nomorJawabanBenar** dimulai dari **0** (opsi A = 0, B = 1, C = 2, D = 3).
 - Letakkan baris baru di dalam daftar `soal: [ ... ]` gedung yang sesuai. Setiap baris diakhiri koma, kecuali yang terakhir.
 - Jika mengetik tanda kutip di dalam teks, tulis `\"`. Contoh: `"Lawan kata \"besar\" adalah …"`.
-- Ingin gedung baru? Salin satu blok gedung, ganti `id` (unik), `nama`, `ikon`, `warna`, dan posisi `x`, `z`. Jaga jarak ±20 dari gedung lain dan jangan keluar dari −44…44.
+- Peta kota memuat **maksimal 12 gedung** (urutan di `soal.js` = urutan slot). Gedung ke-13 dan seterusnya diabaikan.
+- Ingin mengganti gedung? Salin satu blok gedung, ganti `id` (unik), `nama`, `ikon`, `warna`, dan posisi `x`, `z`. Jaga jarak ±20 dari gedung lain dan jangan keluar dari −44…44.
 
 ## Target jumlah
 Minimal **20 soal per tingkat per gedung** (game memilih acak 5 tiap kunjungan). Total satu gedung = ±60 soal.
