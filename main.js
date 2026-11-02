@@ -377,11 +377,58 @@
             buatPohon(x, z, 0.8 + acakTetap() * 0.6); n++;
         }
     });
-    [[-9.5, -9.5], [9.5, -9.5], [-9.5, 9.5], [9.5, 9.5]].forEach((p) => buatPohon(p[0], p[1], 0.9));   // sudut taman
+    [[-9.5, -9.5], [9.5, -9.5], [9.5, 9.5]].forEach((p) => buatPohon(p[0], p[1], 0.9));   // sudut taman
     for (let i = 0; i < 44; i++) {                                // pohon di tepi luar kota
         const t = (acakTetap() * 2 - 1) * 54, d = 47.5 + acakTetap() * 6.5, sk = i % 4;
         buatPohon(sk === 0 ? t : sk === 1 ? t : sk === 2 ? d : -d, sk === 0 ? d : sk === 1 ? -d : t, 0.8 + acakTetap() * 0.7);
     }
+
+    // --- identitas kota: gapura di pintu masuk utara & prasasti pengembang di taman ---
+    const KOTA = Object.assign({ nama: 'Kota Edukasi', ikon: '🏙️', pengembang: 'Kuslan Wawan', tahun: 2026 }, DATA_SOAL.kota || {});
+    ['nama', 'ikon', 'pengembang'].forEach((k) => { KOTA[k] = String(KOTA[k]).slice(0, 28); });
+    document.title = KOTA.nama + ' — Game Edukasi 3D';
+    function papanTeks(w, h, cw, ch, baris, latar, warnaTeks) {
+        const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+        const g = c.getContext('2d'), tebal = Math.round(cw / 64);
+        g.fillStyle = latar; g.fillRect(0, 0, cw, ch);
+        g.strokeStyle = '#f5c542'; g.lineWidth = tebal; g.strokeRect(tebal / 2, tebal / 2, cw - tebal, ch - tebal);
+        g.fillStyle = warnaTeks; g.textAlign = 'center'; g.textBaseline = 'middle';
+        let y = (ch - baris.reduce((a, b) => a + b[1] * 1.25, 0)) / 2;
+        baris.forEach((b) => { g.font = (b[2] ? 'bold ' : '') + b[1] + 'px "Segoe UI", Arial, sans-serif'; g.fillText(b[0], cw / 2, y + b[1] * 0.625, cw - 4 * tebal); y += b[1] * 1.25; });
+        return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) }));
+    }
+    (function gapura() {                                        // gerbang bernama kota, melintang di atas jalan utara
+        const g = new THREE.Group(); g.position.set(14, 0, -47.5);
+        const merah = 0xb91c1c, tua = 0x7f1d1d;
+        [-5.2, 5.2].forEach((x) => {
+            kotak(g, 2.0, 0.8, 2.0, emas, x, 0.4, 0);
+            kotak(g, 1.4, 9.6, 1.4, merah, x, 5.6, 0);
+            kotak(g, 1.9, 0.5, 1.9, emas, x, 10.6, 0);
+            bola(g, 0.45, emas, x, 11.2, 0);
+        });
+        kotak(g, 12.6, 1.0, 1.8, tua, 0, 9.9, 0);
+        kotak(g, 13.4, 0.5, 2.4, merah, 0, 10.7, 0);
+        kotak(g, 10.0, 0.5, 2.0, merah, 0, 11.2, 0);
+        const puncak = new THREE.Mesh(new THREE.ConeGeometry(0.8, 1.4, 4), pakaiBahan(emas)); puncak.position.set(0, 12.2, 0); puncak.rotation.y = Math.PI / 4; g.add(puncak);
+        kotak(g, 9.0, 2.3, 0.3, tua, 0, 8.5, 0);
+        const isi = [['SELAMAT DATANG DI', 44, false], [KOTA.ikon + ' ' + KOTA.nama.toUpperCase(), 88, true]];
+        const depan = papanTeks(9.0, 2.25, 1024, 256, isi, '#7f1d1d', '#fef3c7'); depan.position.set(0, 8.5, 0.16); g.add(depan);
+        const belakang = papanTeks(9.0, 2.25, 1024, 256, isi, '#7f1d1d', '#fef3c7'); belakang.position.set(0, 8.5, -0.16); belakang.rotation.y = Math.PI; g.add(belakang);
+        scene.add(g);
+        [8.8, 19.2].forEach((x) => posPohon.push({ x: x, z: -47.5 }));
+    })();
+    (function prasasti() {                                      // monumen kecil dengan nama pengembang, dekat titik awal
+        const g = new THREE.Group(); g.position.set(-7.6, 0, 8.6);
+        kotak(g, 5.2, 0.5, 1.9, 0x9ca3af, 0, 0.25, 0);
+        kotak(g, 4.7, 0.4, 1.5, 0xb9b5ad, 0, 0.7, 0);
+        const p = new THREE.Group(); p.position.set(0, 1.9, -0.2); p.rotation.x = -0.28; g.add(p);
+        kotak(p, 4.5, 2.25, 0.35, 0x4b5563, 0, 0, 0);
+        const m = papanTeks(4.2, 2.1, 512, 256, [[KOTA.ikon + ' ' + KOTA.nama, 40, true], ['Dikembangkan oleh', 26, false], [KOTA.pengembang, 36, true], ['© ' + KOTA.tahun, 24, false]], '#1f2937', '#f9fafb');
+        m.position.z = 0.19; p.add(m);
+        scene.add(g);
+        penghalang.push({ x: -7.6, z: 8.6, r: 2.5 });
+        [-9.2, -7.6, -6.0].forEach((x) => posPohon.push({ x: x, z: 8.6 }));
+    })();
 
     // --- mobil menyusuri jalan kota (belok di tiap sudut blok), pejalan kaki di taman ---
     function buatMobil(warna) {
@@ -594,7 +641,10 @@
                       3: { pendek: 'Umum', nama: 'Umum / Dewasa', ikon: '🧑' } };
     const simpan = { skor: 0, selesai: [], level: 0, suara: true, koin: 0, koinPeta: 0, misiSelesai: [], punya: [0], warna: 0, kamera: false };
     try { Object.assign(simpan, JSON.parse(localStorage.getItem(KUNCI) || '{}')); } catch (_) { /* abaikan */ }
-    function tulis() { try { localStorage.setItem(KUNCI, JSON.stringify(simpan)); } catch (_) { /* abaikan */ } }
+    function tulis() {
+        try { localStorage.setItem(KUNCI, JSON.stringify(simpan)); } catch (_) { /* abaikan */ }
+        if (window.GE3D && window.GE3D.onSimpan) window.GE3D.onSimpan(simpan);
+    }
 
     let skor = simpan.skor || 0;
     const selesai = new Set(simpan.selesai || []);
@@ -623,12 +673,12 @@
 
     // Toast (pesan singkat)
     let tToast = null;
-    function toast(pesan) {
+    function toast(pesan, ms) {
         const el = $('toast');
         el.textContent = pesan;
         el.classList.add('tampil');
         clearTimeout(tToast);
-        tToast = setTimeout(() => el.classList.remove('tampil'), 3200);
+        tToast = setTimeout(() => el.classList.remove('tampil'), ms || 3200);
     }
 
     // Misi
@@ -935,6 +985,16 @@
         });
     }
     $('btn-sistem').addEventListener('click', panelSistem);
+    function panelTentang() {
+        bukaPanel('ℹ️ Tentang', (box) => {
+            const info = (t, tebal) => { const p = document.createElement('p'); p.className = 'level-info'; p.textContent = t; if (tebal) p.style.fontWeight = '700'; box.appendChild(p); };
+            info(KOTA.ikon + ' ' + KOTA.nama, true);
+            info('Game Edukasi 3D — belajar sambil menjelajah kota. 12 gedung = 12 mata pelajaran SD–SMA.');
+            info('Dikembangkan oleh ' + KOTA.pengembang + ' · © ' + KOTA.tahun);
+            info('Versi ' + VERSI);
+        });
+    }
+    $('btn-tentang').addEventListener('click', panelTentang);
 
     // ---------- 7d. UNGGAH SOAL (Excel / CSV) ----------
     const KUNCI_SOAL = 'ge3d-soal-v1';
@@ -1231,6 +1291,7 @@
         camera.lookAt(player.position.x - Math.sin(kameraYaw) * 2, 1.2, player.position.z - Math.cos(kameraYaw) * 2);
 
         animasiDunia(dt);
+        if (window.GE3D) window.GE3D.onUpdate.forEach((f) => f(dt));
 
         // Koin: berputar, melayang, dan diambil saat disentuh
         koinList.forEach((c) => {
@@ -1276,6 +1337,8 @@
         renderer.setSize(window.innerWidth, window.innerHeight, false);
     });
 
+    // kait untuk Edisi Kelas (multipemain); tidak berpengaruh pada edisi GitHub
+    window.GE3D = { THREE: THREE, scene: scene, player: player, buatManusia: buatManusia, hexBaju: () => bahanBaju.color.getHex(), simpan: simpan, toast: toast, bukaPanel: bukaPanel, menu: menuTombol, onUpdate: [], onSimpan: null };
     updateHud();
     if (soalDilewati) toast('⚠️ ' + soalDilewati + ' soal dilewati karena salah format (lihat Console)');
     if (!simpan.kamera) { toast(isTouch ? '👆 Geser layar untuk memutar kamera 360°' : '🖱️ Tahan & geser mouse (atau tombol Q / R) untuk memutar kamera'); simpan.kamera = true; tulis(); }

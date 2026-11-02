@@ -10,6 +10,8 @@
 const S = (t, q, o, j, p) => ({ t: t, pertanyaan: q, opsi: o, jawaban: j, pembahasan: p });
 
 const DATA_SOAL = {
+  // Identitas kota: tampil di gapura, prasasti taman, dan menu ℹ️ Tentang. Ganti sesuka Anda.
+  kota: { nama: "Kota Edukasi", ikon: "🏙️", pengembang: "Kuslan Wawan", tahun: 2026 },
   gedung: [
     { id: "agama", nama: "Pendidikan Agama & Budi Pekerti", ikon: "🙏", warna: "#14b8a6", soal: [
       S(1, "Sebelum makan, kita dianjurkan untuk …", ["Berdoa", "Berlari", "Bermain", "Tidur"], 0, "Berdoa sebelum makan adalah wujud syukur."),
