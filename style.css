@@ -63,37 +63,39 @@ html, body {
     50%      { transform: translateX(-50%) scale(1.05); }
 }
 
-/* ---------- Joystik bulat (sentuh) ---------- */
+/* ---------- Joystik bulat & tombol lompat (sentuh) — transparan & menyesuaikan layar ---------- */
 #joystick {
-    display: none;
-    position: fixed;
-    left: max(28px, env(safe-area-inset-left));
-    bottom: max(28px, env(safe-area-inset-bottom));
-    width: 128px; height: 128px;
-    border-radius: 50%;
-    background: rgba(15, 23, 42, 0.35);
-    border: 3px solid rgba(255, 255, 255, 0.6);
-    z-index: 10;
-    touch-action: none;
-    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    display: none; position: fixed; z-index: 10;
+    left: max(22px, env(safe-area-inset-left)); bottom: max(22px, env(safe-area-inset-bottom));
+    width: clamp(84px, 24vmin, 116px); height: clamp(84px, 24vmin, 116px);
+    border-radius: 50%; background: rgba(15, 23, 42, 0.16); border: 2px solid rgba(255, 255, 255, 0.32);
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    transition: background .15s, border-color .15s;
 }
+#joystick.aktif { background: rgba(15, 23, 42, 0.3); border-color: rgba(255, 255, 255, 0.6); }
 body.touch #joystick { display: block; }
 #joy-kenop {
-    position: absolute; left: 50%; top: 50%;
-    width: 56px; height: 56px; margin: -28px 0 0 -28px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
-    pointer-events: none;
+    position: absolute; left: 50%; top: 50%; width: 42%; height: 42%; margin: -21% 0 0 -21%;
+    border-radius: 50%; background: rgba(255, 255, 255, 0.5); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); pointer-events: none;
 }
+#btn-lompat {
+    display: none; position: fixed; z-index: 10;
+    right: max(22px, env(safe-area-inset-right)); bottom: max(30px, env(safe-area-inset-bottom));
+    width: clamp(54px, 17vmin, 74px); height: clamp(54px, 17vmin, 74px); padding: 0;
+    border-radius: 50%; background: rgba(15, 23, 42, 0.2); border: 2px solid rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.92); font: 700 11px 'Segoe UI', sans-serif; letter-spacing: .4px; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+#btn-lompat.aktif { background: rgba(250, 204, 21, 0.55); }
+body.touch #btn-lompat { display: block; }
 body.touch #prompt-interaksi {
-    left: auto; right: max(16px, env(safe-area-inset-right)); bottom: max(24px, env(safe-area-inset-bottom));
-    transform: none; animation: none; max-width: calc(100vw - 210px);
+    left: auto; right: max(16px, env(safe-area-inset-right)); transform: none; animation: none;
+    bottom: calc(max(30px, env(safe-area-inset-bottom)) + clamp(54px, 17vmin, 74px) + 12px); max-width: calc(100vw - 150px);
 }
 body.touch #prompt-interaksi small { display: none; }
 
 /* ---------- Modal kuis ---------- */
-#modal-kuis, #modal-level, #modal-panel {
+#modal-kuis, #modal-level, #modal-panel, #modal-profil {
     position: fixed;
     inset: 0;
     z-index: 100;
@@ -267,3 +269,13 @@ body.touch #menu-tombol .tombol-hud { padding: 7px 10px; font-size: 13px; }
     .modal-header { padding: 10px 16px; }
     .btn-aksi { margin-top: 8px; padding: 8px 16px; }
 }
+
+/* ---------- Profil & toko karakter ---------- */
+.profil-input { width: 100%; padding: 10px; font-size: 18px; text-align: center; border: 2px solid #cbd5e1; border-radius: 10px; margin-bottom: 14px; }
+.profil-pilih { display: flex; gap: 10px; margin-bottom: 8px; }
+.profil-kartu { flex: 1; flex-direction: column; justify-content: center; text-align: center; font-size: 40px; padding: 12px; }
+.profil-kartu span { font-size: 15px; }
+.profil-kartu.dipilih { border-color: #2563eb; background: #dbeafe; }
+.kat-baris { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.kat-tab { flex: 1 1 auto; padding: 8px 10px; border-radius: 10px; border: 2px solid #cbd5e1; background: #fff; font: 600 14px inherit; cursor: pointer; color: #0f172a; }
+.kat-tab.aktif { background: #2563eb; border-color: #2563eb; color: #fff; }

@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    const VERSI = '5.0';
+    const VERSI = '6.0';
     console.info('Game Edukasi 3D versi ' + VERSI);
 
     const $ = (id) => document.getElementById(id);
@@ -181,21 +181,44 @@
     buatMarka(putih, tepi.concat(zebra), 0.06);
     buatMarka(kuning, putus, 0.065);
 
-    // --- orang berbentuk balok (gaya Minecraft) ---
+    // --- orang berbentuk balok (gaya Minecraft): laki-laki / perempuan, topi, aksesori, motif baju ---
     const KULIT = bahan(0xd9a37a);
-    function buatManusia(bajuMat, rambut, celana) {
+    const kosongkan = (slot) => { while (slot.children.length) slot.remove(slot.children[0]); };
+    const TOPI = [null,
+        (s) => { kotak(s, 0.58, 0.22, 0.58, 0xdc2626, 0, 0, 0); kotak(s, 0.5, 0.05, 0.3, 0xb91c1c, 0, -0.08, 0.38); },
+        (s) => { tabung(s, 0.03, 0.85, 0.35, 0xe5c07b, 0, 0.08, 0, 14); },
+        (s) => { tabung(s, 0, 0.55, 1.0, 0x6d28d9, 0, 0.5, 0, 14); kotak(s, 1.0, 0.06, 1.0, 0x4c1d95, 0, -0.04, 0); bola(s, 0.1, emas, 0, 1.05, 0); },
+        (s) => { kotak(s, 0.52, 0.18, 0.52, 0x111827, 0, 0, 0); kotak(s, 0.78, 0.07, 0.78, 0x111827, 0, 0.13, 0); kotak(s, 0.04, 0.3, 0.04, emas, 0.34, 0, 0.34); },
+        (s) => { kotak(s, 0.56, 0.2, 0.56, emas, 0, 0.02, 0); [[-0.2, -0.2], [0.2, -0.2], [-0.2, 0.2], [0.2, 0.2]].forEach((p) => kotak(s, 0.1, 0.16, 0.1, emas, p[0], 0.18, p[1])); bola(s, 0.07, 0xdc2626, 0, 0.05, 0.3); }
+    ];
+    const AKS = [null,
+        (p, w) => { kotak(w, 0.2, 0.11, 0.04, 0x111111, -0.13, 0, 0); kotak(w, 0.2, 0.11, 0.04, 0x111111, 0.13, 0, 0); kotak(w, 0.08, 0.04, 0.04, 0x111111, 0, 0.02, 0); },
+        (p) => { kotak(p, 0.5, 0.6, 0.25, 0x16a34a, 0, 0.4, -0.15); kotak(p, 0.36, 0.22, 0.1, 0x15803d, 0, 0.25, -0.3); },
+        (p) => { kotak(p, 0.74, 1.15, 0.06, 0xdc2626, 0, 0.12, -0.05); },
+        (p) => { [-1, 1].forEach((sk) => { const w = kotak(p, 0.55, 0.95, 0.06, 0xf8fafc, sk * 0.5, 0.45, -0.1); w.rotation.z = -sk * 0.45; }); }
+    ];
+    function buatManusia(bajuMat, rambutWarna, celanaWarna, opsi) {
+        opsi = opsi || {};
+        const matC = new THREE.MeshStandardMaterial({ color: celanaWarna });
+        const matR = new THREE.MeshStandardMaterial({ color: rambutWarna });
         const grup = new THREE.Group();
         const atas = new THREE.Group(); atas.position.y = 0.75;
         kotak(atas, 0.62, 0.75, 0.34, bajuMat, 0, 0.375, 0);
         const kepala = new THREE.Group(); kepala.position.y = 1.0;
         kotak(kepala, 0.5, 0.5, 0.5, KULIT, 0, 0, 0);
-        kotak(kepala, 0.54, 0.14, 0.54, rambut, 0, 0.22, 0);
-        kotak(kepala, 0.54, 0.34, 0.1, rambut, 0, 0.06, -0.22);
+        kotak(kepala, 0.54, 0.14, 0.54, matR, 0, 0.22, 0);
+        kotak(kepala, 0.54, 0.34, 0.1, matR, 0, 0.06, -0.22);
         [-0.12, 0.12].forEach((dx) => {
-            kotak(kepala, 0.12, 0.08, 0.02, 0xffffff, dx, 0.03, 0.255);
-            kotak(kepala, 0.06, 0.08, 0.02, 0x2b1b0f, dx * 1.1, 0.03, 0.265);
+            if (!opsi.s) kotak(kepala, 0.12, 0.08, 0.02, 0xffffff, dx, 0.03, 0.255);
+            kotak(kepala, opsi.s ? 0.09 : 0.06, 0.08, 0.02, 0x2b1b0f, opsi.s ? dx : dx * 1.1, 0.03, 0.265);
         });
-        kotak(kepala, 0.14, 0.04, 0.02, 0x9a4a3a, 0, -0.12, 0.255);
+        if (!opsi.s) kotak(kepala, 0.14, 0.04, 0.02, 0x9a4a3a, 0, -0.12, 0.255);
+        const rambutP = new THREE.Group(); kepala.add(rambutP);                    // rambut panjang (perempuan)
+        kotak(rambutP, 0.54, 0.75, 0.12, matR, 0, -0.17, -0.28);
+        [-0.3, 0.3].forEach((dx) => kotak(rambutP, 0.1, 0.42, 0.42, matR, dx, -0.06, -0.04));
+        const topiSlot = new THREE.Group(); topiSlot.position.y = 0.3; kepala.add(topiSlot);
+        const wajahSlot = new THREE.Group(); wajahSlot.position.set(0, 0.04, 0.27); kepala.add(wajahSlot);
+        const punggung = new THREE.Group(); punggung.position.set(0, 0, -0.17); atas.add(punggung);
         atas.add(kepala);
         const lengan = (sisi) => {
             const p = new THREE.Group(); p.position.set(sisi * 0.45, 0.72, 0);
@@ -205,13 +228,67 @@
         };
         const kaki = (sisi) => {
             const p = new THREE.Group(); p.position.set(sisi * 0.16, 0.75, 0);
-            kotak(p, 0.3, 0.7, 0.3, celana, 0, -0.35, 0);
-            kotak(p, 0.32, 0.1, 0.38, 0x6b7280, 0, -0.7, 0.03);
+            kotak(p, 0.3, 0.7, 0.3, matC, 0, -0.35, 0);
+            if (!opsi.s) kotak(p, 0.32, 0.1, 0.38, 0x6b7280, 0, -0.7, 0.03);
             grup.add(p); return p;
         };
         const lenganKiri = lengan(-1), lenganKanan = lengan(1), kakiKiri = kaki(-1), kakiKanan = kaki(1);
+        const rok = new THREE.Group(); kotak(rok, 0.84, 0.3, 0.44, matC, 0, 0.66, 0); grup.add(rok);   // rok (perempuan)
         grup.add(atas);
-        return { grup: grup, atas: atas, kepala: kepala, lenganKiri: lenganKiri, lenganKanan: lenganKanan, kakiKiri: kakiKiri, kakiKanan: kakiKanan };
+        const o = { grup: grup, atas: atas, kepala: kepala, lenganKiri: lenganKiri, lenganKanan: lenganKanan, kakiKiri: kakiKiri, kakiKanan: kakiKanan,
+            mat: { baju: bajuMat, celana: matC, rambut: matR } };
+        o.setGender = (g) => { rambutP.visible = g === 'P'; rok.visible = g === 'P'; };
+        o.pasangTopi = (id) => { kosongkan(topiSlot); if (TOPI[id]) TOPI[id](topiSlot); };
+        o.pasangAksesori = (id) => { kosongkan(punggung); kosongkan(wajahSlot); if (id === 1) AKS[1](punggung, wajahSlot); else if (AKS[id]) AKS[id](punggung); };
+        o.setGender(opsi.g || 'L');
+        return o;
+    }
+
+    // --- katalog toko, motif baju, dan penerapan tampilan ---
+    const KATALOG = {
+        b: [{ n: 'Biru', h: 0x2563eb, x: 0 }, { n: 'Merah', h: 0xdc2626, x: 15 }, { n: 'Hijau', h: 0x16a34a, x: 15 }, { n: 'Ungu', h: 0x7c3aed, x: 25 }, { n: 'Oranye', h: 0xea580c, x: 25 }, { n: 'Pink', h: 0xdb2777, x: 40 }],
+        m: [{ n: 'Polos', x: 0 }, { n: 'Garis', x: 20 }, { n: 'Kotak-kotak', x: 30 }, { n: 'Bintang', x: 40 }, { n: 'Pelangi', x: 60 }],
+        c: [{ n: 'Biru tua', h: 0x1e3a8a, x: 0 }, { n: 'Hitam', h: 0x1f2937, x: 10 }, { n: 'Abu-abu', h: 0x6b7280, x: 10 }, { n: 'Krem', h: 0xd6c7a1, x: 15 }, { n: 'Merah', h: 0xb91c1c, x: 20 }, { n: 'Hijau tua', h: 0x166534, x: 20 }],
+        t: [{ n: 'Tanpa topi', x: 0 }, { n: 'Topi baseball', x: 25 }, { n: 'Caping', x: 30 }, { n: 'Topi penyihir', x: 45 }, { n: 'Topi toga', x: 60 }, { n: 'Mahkota', x: 80 }],
+        a: [{ n: 'Tanpa aksesori', x: 0 }, { n: 'Kacamata', x: 30 }, { n: 'Ransel sekolah', x: 35 }, { n: 'Jubah merah', x: 70 }, { n: 'Sayap', x: 120 }]
+    };
+    const cacheMotif = {};
+    function teksturMotif(hex, id) {
+        const kunci = hex + ':' + id;
+        if (cacheMotif[kunci]) return cacheMotif[kunci];
+        const c = document.createElement('canvas'); c.width = 64; c.height = 64;
+        const g = c.getContext('2d');
+        g.fillStyle = '#' + hex.toString(16).padStart(6, '0'); g.fillRect(0, 0, 64, 64);
+        if (id === 1) { g.fillStyle = 'rgba(255,255,255,0.75)'; for (let y = 4; y < 64; y += 16) g.fillRect(0, y, 64, 8); }
+        else if (id === 2) { g.fillStyle = 'rgba(255,255,255,0.6)'; for (let v = 4; v < 64; v += 16) { g.fillRect(v, 0, 8, 64); g.fillRect(0, v, 64, 8); } }
+        else if (id === 3) { g.fillStyle = '#fde047'; g.font = '22px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; [[16, 16], [48, 16], [32, 40], [10, 56], [54, 56]].forEach((p) => g.fillText('★', p[0], p[1])); }
+        else if (id === 4) { ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6', '#8b5cf6'].forEach((w, i) => { g.fillStyle = w; g.fillRect(0, i * 11, 64, 11); }); }
+        const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter;
+        cacheMotif[kunci] = t; return t;
+    }
+    function terapkanTampilan(m, d) {      // d = [gender(0/1), baju, celana, motif, topi, aksesori]
+        const b = KATALOG.b[d[1]] || KATALOG.b[0], c = KATALOG.c[d[2]] || KATALOG.c[0], motif = d[3] | 0;
+        m.setGender(d[0] ? 'P' : 'L');
+        m.mat.baju.color.setHex(motif ? 0xffffff : b.h);
+        m.mat.baju.map = motif ? teksturMotif(b.h, motif) : null;
+        m.mat.baju.needsUpdate = true;
+        m.mat.celana.color.setHex(c.h);
+        m.pasangTopi(d[4] | 0); m.pasangAksesori(d[5] | 0);
+    }
+    function buatLabel(teks) {              // nama peserta di atas kepala
+        const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+        const g = c.getContext('2d');
+        g.fillStyle = 'rgba(15,23,42,0.72)'; g.fillRect(8, 10, 240, 44);
+        g.fillStyle = '#fff'; g.font = 'bold 30px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(teks, 128, 33, 224);
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c) }));
+        sp.scale.set(2.6, 0.65, 1); sp.position.y = 3.4;
+        return sp;
+    }
+    function putarKe(g, target, dt) {
+        let d = target - g.rotation.y;
+        while (d > Math.PI) d -= TAU;
+        while (d < -Math.PI) d += TAU;
+        g.rotation.y += d * Math.min(1, dt * 8);
     }
 
     // --- gedung: satu bentuk khas per mata pelajaran ---
@@ -373,11 +450,11 @@
         if (b.x === 0 && b.z === 0) return;                      // blok tengah = taman
         for (let n = 0, coba = 0; n < 8 && coba < 150; coba++) {
             const x = b.x + (acakTetap() * 2 - 1) * 9, z = b.z + (acakTetap() * 2 - 1) * 9;
-            if (daftarGedung.some((g) => Math.hypot(x - g.x, z - g.z) < 7.5)) continue;
+            if (daftarGedung.some((g) => Math.hypot(x - g.x, z - g.z) < 7.5) || Math.hypot(x - 6.2, z + 36) < 4.8) continue;
             buatPohon(x, z, 0.8 + acakTetap() * 0.6); n++;
         }
     });
-    [[-9.5, -9.5], [9.5, -9.5], [9.5, 9.5]].forEach((p) => buatPohon(p[0], p[1], 0.9));   // sudut taman
+    [[-9.5, -9.5], [9.5, -9.5], [-9.5, 9.5], [9.5, 9.5]].forEach((p) => buatPohon(p[0], p[1], 0.9));   // sudut taman
     for (let i = 0; i < 44; i++) {                                // pohon di tepi luar kota
         const t = (acakTetap() * 2 - 1) * 54, d = 47.5 + acakTetap() * 6.5, sk = i % 4;
         buatPohon(sk === 0 ? t : sk === 1 ? t : sk === 2 ? d : -d, sk === 0 ? d : sk === 1 ? -d : t, 0.8 + acakTetap() * 0.7);
@@ -418,7 +495,7 @@
         [8.8, 19.2].forEach((x) => posPohon.push({ x: x, z: -47.5 }));
     })();
     (function prasasti() {                                      // monumen kecil dengan nama pengembang, dekat titik awal
-        const g = new THREE.Group(); g.position.set(-7.6, 0, 8.6);
+        const g = new THREE.Group(); g.position.set(6.2, 0, -36); g.rotation.y = Math.PI / 2;   // menghadap jalan (timur)
         kotak(g, 5.2, 0.5, 1.9, 0x9ca3af, 0, 0.25, 0);
         kotak(g, 4.7, 0.4, 1.5, 0xb9b5ad, 0, 0.7, 0);
         const p = new THREE.Group(); p.position.set(0, 1.9, -0.2); p.rotation.x = -0.28; g.add(p);
@@ -426,8 +503,8 @@
         const m = papanTeks(4.2, 2.1, 512, 256, [[KOTA.ikon + ' ' + KOTA.nama, 40, true], ['Dikembangkan oleh', 26, false], [KOTA.pengembang, 36, true], ['© ' + KOTA.tahun, 24, false]], '#1f2937', '#f9fafb');
         m.position.z = 0.19; p.add(m);
         scene.add(g);
-        penghalang.push({ x: -7.6, z: 8.6, r: 2.5 });
-        [-9.2, -7.6, -6.0].forEach((x) => posPohon.push({ x: x, z: 8.6 }));
+        penghalang.push({ x: 6.2, z: -36, r: 2.7 });
+        [-38, -36, -34].forEach((z) => posPohon.push({ x: 6.2, z: z }));
     })();
 
     // --- mobil menyusuri jalan kota (belok di tiap sudut blok), pejalan kaki di taman ---
@@ -457,7 +534,7 @@
     for (let i = 0; i < 6; i++) {
         const m = buatManusia(
             new THREE.MeshStandardMaterial({ color: [0xf97316, 0x16a34a, 0xdb2777, 0x7c3aed, 0xeab308, 0x0ea5e9][i] }),
-            [0x2b1b0f, 0xb45309, 0x111111, 0x6b3e1f, 0x1f2937, 0xd4a017][i], 0x374151);
+            [0x2b1b0f, 0xb45309, 0x111111, 0x6b3e1f, 0x1f2937, 0xd4a017][i], 0x374151, { s: true, g: i % 2 ? 'P' : 'L' });
         scene.add(m.grup);
         pejalan.push({ m: m, a: i * TAU / 6, arah: i % 2 ? -1 : 1, r: 7.4 + (i % 3) * 0.3, w: 0.1 + (i % 3) * 0.02, fase: i });
     }
@@ -521,7 +598,7 @@
     for (let n = 0, coba = 0; n < JUMLAH_KOIN && coba < 8000; coba++) {
         const x = (acakTetap() * 2 - 1) * (BATAS - 2);
         const z = (acakTetap() * 2 - 1) * (BATAS - 2);
-        if (Math.abs(x) > BATAS - 1.5 || Math.abs(z) > BATAS - 1.5 || Math.hypot(x, z - 9) < 3 || Math.hypot(x, z) < 5 || !daftarGedung.every((g) => Math.hypot(x - g.x, z - g.z) > 7)
+        if (Math.abs(x) > BATAS - 1.5 || Math.abs(z) > BATAS - 1.5 || Math.hypot(x - 14, z + 36) < 3 || Math.hypot(x, z) < 5 || !daftarGedung.every((g) => Math.hypot(x - g.x, z - g.z) > 7)
             || posPohon.some((t) => Math.hypot(x - t.x, z - t.z) < 1.9)
             || koinList.some((q) => Math.hypot(x - q.position.x, z - q.position.z) < 4.5)) continue;
         const k = new THREE.Group();
@@ -535,14 +612,40 @@
         n++;
     }
 
-    // NPC penjaga di depan tiap gedung
-    const npcList = daftarGedung.map((g, i) => {
+    // NPC berpatroli di trotoar depan tiap gedung (2 per gedung)
+    const NPC_BAJU = [0xf97316, 0x16a34a, 0xdb2777, 0x7c3aed, 0xeab308, 0x0ea5e9, 0xef4444, 0x14b8a6];
+    const NPC_RAMBUT = [0x2b1b0f, 0xb45309, 0x111111, 0x6b3e1f, 0x1f2937, 0xd4a017];
+    const npcList = [];
+    daftarGedung.forEach((g, i) => {
         const sl = SLOT_GEDUNG[i];
-        const m = buatManusia(new THREE.MeshStandardMaterial({ color: g.warna }), 0x2b1b0f, 0x374151);
-        m.grup.position.set(g.x + sl.dx * 4.9 - sl.dz * 3, 0, g.z + sl.dz * 4.9 + sl.dx * 3);
-        scene.add(m.grup);
-        return m.grup;
+        for (let k = 0; k < 2; k++) {
+            const idx = i * 2 + k, dalam = 4.6 + k * 0.6;                    // dua lajur di trotoar
+            const m = buatManusia(new THREE.MeshStandardMaterial({ color: NPC_BAJU[idx % 8] }), NPC_RAMBUT[idx % 6], [0x374151, 0x1e3a8a, 0x6b7280][idx % 3], { s: true, g: idx % 2 ? 'P' : 'L' });
+            m.grup.userData.jenis = 'npc';
+            scene.add(m.grup);
+            npcList.push({ m: m, ox: g.x + sl.dx * dalam, oz: g.z + sl.dz * dalam, tx: -sl.dz, tz: sl.dx, s: (k ? 1 : -1) * (1 + (idx % 3)), arah: k ? -1 : 1, v: 1.1 + (idx % 3) * 0.2, jeda: 0, w: 0 });
+        }
     });
+    function patroliNpc(dt) {
+        npcList.forEach((o) => {
+            const g = o.m.grup;
+            const dP = Math.hypot(player.position.x - g.position.x, player.position.z - g.position.z);
+            let jalan = true;
+            if (dP < 3.5) { jalan = false; putarKe(g, Math.atan2(player.position.x - g.position.x, player.position.z - g.position.z), dt); }   // berhenti menyapa
+            else if (o.jeda > 0) { o.jeda -= dt; jalan = false; }
+            if (jalan) {
+                o.s += o.arah * o.v * dt;
+                if (o.s > 4.4) { o.s = 4.4; o.arah = -1; o.jeda = 0.8 + (o.v % 1); }
+                else if (o.s < -4.4) { o.s = -4.4; o.arah = 1; o.jeda = 0.8 + (o.v % 1); }
+                putarKe(g, Math.atan2(o.tx * o.arah, o.tz * o.arah), dt * 1.5);
+            }
+            g.position.set(o.ox + o.tx * o.s, 0, o.oz + o.tz * o.s);
+            o.w += dt * (jalan ? 7 : 0);
+            const ayun = jalan ? Math.sin(o.w) * 0.6 : 0;
+            o.m.kakiKiri.rotation.x = ayun; o.m.kakiKanan.rotation.x = -ayun;
+            o.m.lenganKiri.rotation.x = -ayun; o.m.lenganKanan.rotation.x = ayun;
+        });
+    }
 
     // ---------- 4. PEMAIN (karakter balok ala Minecraft) ----------
     const bahanBaju = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.6 });
@@ -550,24 +653,28 @@
     const player = manusiaP.grup, badanAtas = manusiaP.atas, kepala = manusiaP.kepala;
     const lenganKiri = manusiaP.lenganKiri, lenganKanan = manusiaP.lenganKanan;
     const kakiKiri = manusiaP.kakiKiri, kakiKanan = manusiaP.kakiKanan;
-    player.position.set(0, 0, 9);          // mulai di taman, dekat air mancur
+    player.position.set(14, 0, -36);       // titik awal: di jalan utara, gapura langsung terlihat di depan
     scene.add(player);
 
     // ---------- 5. INPUT ----------
     const keys = Object.create(null);
     const joy = { aktif: false, x: 0, z: 0, id: null };
-    const TOMBOL_GERAK = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'q', 'r'];
+    let lompatSentuh = false;
+    const TOMBOL_GERAK = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'q', 'r', ' '];
 
     function resetInput() {
         Object.keys(keys).forEach((k) => { keys[k] = false; });
         joyLepas();
+        lompatSentuh = false; $('btn-lompat').classList.remove('aktif');
     }
 
     window.addEventListener('keydown', (e) => {
         if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;   // sedang mengetik nama
         const k = e.key.toLowerCase();
 
         if (isKuisOpen) {
+            if (profilTampil()) return;
             if (k === 'escape') { if (panelTampil()) tutupPanel(); else if (levelTampil()) { if (simpan.level) tutupLevel(); } else tutupKuis(); return; }
             if (panelTampil()) return;
             // Pintasan jawaban: 1-4 atau A-D
@@ -605,11 +712,11 @@
     }
     function joyLepas(e) {
         if (e && joy.id !== null && e.pointerId !== joy.id) return;
-        joy.id = null; joy.aktif = false; joy.x = 0; joy.z = 0;
+        joy.id = null; joy.aktif = false; joy.x = 0; joy.z = 0; joyEl.classList.remove('aktif');
         joyKenop.style.transform = 'translate(0px,0px)';
     }
     joyEl.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
+        e.preventDefault(); joyEl.classList.add('aktif');
         joy.id = e.pointerId;
         try { joyEl.setPointerCapture(e.pointerId); } catch (_) { /* abaikan */ }
         joyGerak(e);
@@ -617,6 +724,10 @@
     joyEl.addEventListener('pointermove', (e) => { if (e.pointerId === joy.id) { e.preventDefault(); joyGerak(e); } });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => joyEl.addEventListener(t, joyLepas));
     joyEl.addEventListener('contextmenu', (e) => e.preventDefault());
+    const btnLompat = $('btn-lompat');                      // tombol lompat (sentuh)
+    btnLompat.addEventListener('pointerdown', (e) => { e.preventDefault(); lompatSentuh = true; btnLompat.classList.add('aktif'); try { btnLompat.setPointerCapture(e.pointerId); } catch (_) { /* abaikan */ } });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => btnLompat.addEventListener(t, () => { lompatSentuh = false; btnLompat.classList.remove('aktif'); }));
+    btnLompat.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // Putar kamera: geser (mouse/jari) di area permainan; roda mouse = zoom
     let seret = null;
@@ -639,7 +750,7 @@
     const TINGKAT = { 1: { pendek: 'Anak', nama: 'Anak (PAUD–SD)', ikon: '🧒' },
                       2: { pendek: 'Pelajar', nama: 'Pelajar (SMP–SMA)', ikon: '🧑‍🎓' },
                       3: { pendek: 'Umum', nama: 'Umum / Dewasa', ikon: '🧑' } };
-    const simpan = { skor: 0, selesai: [], level: 0, suara: true, koin: 0, koinPeta: 0, misiSelesai: [], punya: [0], warna: 0, kamera: false };
+    const simpan = { skor: 0, selesai: [], level: 0, suara: true, koin: 0, koinPeta: 0, misiSelesai: [], punya: [0], warna: 0, kamera: false, gender: '', nama: '', milik: null, pakai: null };
     try { Object.assign(simpan, JSON.parse(localStorage.getItem(KUNCI) || '{}')); } catch (_) { /* abaikan */ }
     function tulis() {
         try { localStorage.setItem(KUNCI, JSON.stringify(simpan)); } catch (_) { /* abaikan */ }
@@ -700,14 +811,13 @@
         });
     }
 
-    // Warna baju karakter (dibuka dengan koin)
-    const WARNA = [
-        { n: 'Biru', h: 0x2563eb, harga: 0 }, { n: 'Merah', h: 0xdc2626, harga: 15 },
-        { n: 'Hijau', h: 0x16a34a, harga: 15 }, { n: 'Ungu', h: 0x7c3aed, harga: 25 },
-        { n: 'Oranye', h: 0xea580c, harga: 25 }, { n: 'Pink', h: 0xdb2777, harga: 40 }
-    ];
-    if (!WARNA[simpan.warna]) simpan.warna = 0;
-    bahanBaju.color.setHex(WARNA[simpan.warna].h);
+    // Tampilan karakter (gender, baju, motif, celana, topi, aksesori) — dimigrasi dari versi lama
+    function tampilanSaatIni() { return [simpan.gender === 'P' ? 1 : 0, simpan.pakai.b, simpan.pakai.c, simpan.pakai.m, simpan.pakai.t, simpan.pakai.a]; }
+    simpan.pakai = Object.assign({ b: 0, c: 0, m: 0, t: 0, a: 0 }, simpan.pakai || {});
+    if (!Array.isArray(simpan.milik)) simpan.milik = (simpan.punya || [0]).map((i) => 'b' + i).concat(['c0', 'm0', 't0', 'a0']);
+    if (!simpan.pakai.b && simpan.warna) simpan.pakai.b = simpan.warna;
+    ['b', 'c', 'm', 't', 'a'].forEach((k) => { if (!KATALOG[k][simpan.pakai[k]]) simpan.pakai[k] = 0; });
+    terapkanTampilan(manusiaP, tampilanSaatIni());
     $('hud-kontrol').innerHTML = isTouch
         ? '🎮 joystik = jalan · geser layar = putar kamera'
         : '🎮 <b>W A S D</b> / <b>Panah</b> jalan · <b>E</b> masuk gedung · <b>geser mouse</b> atau <b>Q / R</b> putar kamera';
@@ -886,6 +996,38 @@
     $('btn-suara').addEventListener('click', () => { simpan.suara = !simpan.suara; updateHud(); bunyi([[660, 0.1]]); });
     modalLevel.addEventListener('click', (e) => { if (e.target === modalLevel && simpan.level) tutupLevel(); });
 
+    // ---------- 7b2. PROFIL: nama peserta & jenis karakter ----------
+    const modalProfil = $('modal-profil');
+    const namaKelas = (window.KELAS && window.KELAS.nama) || '';
+    let labelNama = null;
+    function setNamaPemain(n) { if (labelNama) player.remove(labelNama); labelNama = buatLabel(n); player.add(labelNama); }
+    function profilTampil() { return !modalProfil.classList.contains('modal-hidden'); }
+    function tandaiGender() { ['L', 'P'].forEach((g) => { const b = $('pilih-' + g); if (simpan.gender === g) b.classList.add('dipilih'); else b.classList.remove('dipilih'); }); }
+    function pilihGender(g) { simpan.gender = g; terapkanTampilan(manusiaP, tampilanSaatIni()); tandaiGender(); }
+    $('pilih-L').addEventListener('click', () => pilihGender('L'));
+    $('pilih-P').addEventListener('click', () => pilihGender('P'));
+    function bukaProfil() {
+        isKuisOpen = true; resetInput();
+        $('profil-nama-blok').style.display = namaKelas ? 'none' : '';
+        $('profil-nama').value = simpan.nama || '';
+        tandaiGender(); $('profil-err').textContent = '';
+        modalProfil.classList.remove('modal-hidden');
+    }
+    function mulaiProfil() {
+        const nama = namaKelas || $('profil-nama').value.trim().replace(/\s+/g, ' ');
+        if (!simpan.gender) { $('profil-err').textContent = 'Pilih karakter dulu: laki-laki atau perempuan.'; return; }
+        if (!/^[\p{L}\p{N} ]{2,12}$/u.test(nama)) { $('profil-err').textContent = 'Nama 2–12 karakter: huruf, angka, spasi.'; return; }
+        simpan.nama = nama; setNamaPemain(nama); updateHud();
+        isKuisOpen = false; modalProfil.classList.add('modal-hidden');
+        if (!simpan.level) bukaLevel();
+    }
+    $('profil-mulai').addEventListener('click', mulaiProfil);
+    $('profil-nama').addEventListener('keydown', (e) => { if (e.key === 'Enter') mulaiProfil(); });
+    function mulaiAwal() {
+        if (simpan.nama || namaKelas) setNamaPemain(namaKelas || simpan.nama);
+        if (!simpan.gender || !(simpan.nama || namaKelas)) bukaProfil(); else if (!simpan.level) bukaLevel();
+    }
+
     // ---------- 7c. PANEL MISI & KARAKTER ----------
     const modalPanel = $('modal-panel');
     function panelTampil() { return !modalPanel.classList.contains('modal-hidden'); }
@@ -919,27 +1061,39 @@
             });
         });
     }
+    const KAT_NAMA = { b: '👕 Baju', m: '🎨 Motif', c: '👖 Celana', t: '🎩 Topi', a: '🕶️ Aksesori' };
+    const KAT_IKON = { m: '🎨', t: '🎩', a: '🕶️' };
+    let katAktif = 'b';
     function panelKarakter() {
-        bukaPanel('👕 Pilih warna baju', (box) => {
-            WARNA.forEach((w, i) => {
-                const punya = simpan.punya.indexOf(i) >= 0;
-                const b = document.createElement('button');
-                b.type = 'button';
-                b.className = 'btn-opsi';
-                const kotak = document.createElement('span'); kotak.className = 'warna-kotak'; kotak.style.background = '#' + w.h.toString(16).padStart(6, '0');
+        bukaPanel('👕 Karakter & toko', (box) => {
+            const baris = (isi) => { const d = document.createElement('div'); d.className = 'kat-baris'; isi(d); box.appendChild(d); };
+            const p = document.createElement('p'); p.className = 'level-info'; p.textContent = '🪙 Koinmu: ' + simpan.koin + ' — beli & pakai item agar karaktermu makin keren!'; box.appendChild(p);
+            baris((d) => [['L', '👦 Laki-laki'], ['P', '👧 Perempuan']].forEach((g) => {
+                const b = document.createElement('button'); b.type = 'button'; b.className = 'kat-tab' + (simpan.gender === g[0] ? ' aktif' : ''); b.textContent = g[1];
+                b.addEventListener('click', () => { simpan.gender = g[0]; terapkanTampilan(manusiaP, tampilanSaatIni()); updateHud(); panelKarakter(); });
+                d.appendChild(b);
+            }));
+            baris((d) => Object.keys(KAT_NAMA).forEach((k) => {
+                const b = document.createElement('button'); b.type = 'button'; b.className = 'kat-tab' + (k === katAktif ? ' aktif' : ''); b.textContent = KAT_NAMA[k];
+                b.addEventListener('click', () => { katAktif = k; panelKarakter(); });
+                d.appendChild(b);
+            }));
+            KATALOG[katAktif].forEach((it, i) => {
+                const kunci = katAktif + i, punya = simpan.milik.indexOf(kunci) >= 0, dipakai = simpan.pakai[katAktif] === i;
+                const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-opsi';
+                const kotakW = document.createElement('span'); kotakW.className = 'warna-kotak';
+                if (it.h !== undefined) kotakW.style.background = '#' + it.h.toString(16).padStart(6, '0'); else kotakW.textContent = KAT_IKON[katAktif] || '';
                 const teks = document.createElement('span');
-                teks.textContent = w.n + ' — ' + (simpan.warna === i ? '✓ dipakai' : punya ? 'Pakai' : '🪙 ' + w.harga + ' · Beli');
-                b.appendChild(kotak); b.appendChild(teks);
+                teks.textContent = it.n + ' — ' + (dipakai ? '✓ dipakai' : punya ? 'Pakai' : '🪙 ' + it.x + ' · Beli');
+                b.appendChild(kotakW); b.appendChild(teks);
                 b.addEventListener('click', () => {
                     if (!punya) {
-                        if (simpan.koin < w.harga) { toast('Koin belum cukup 🪙'); return; }
-                        simpan.koin -= w.harga;
-                        simpan.punya.push(i);
+                        if (simpan.koin < it.x) { toast('Koin belum cukup 🪙'); return; }
+                        simpan.koin -= it.x; simpan.milik.push(kunci); bunyi([[660, 0.08], [880, 0.12]]);
                     }
-                    simpan.warna = i;
-                    bahanBaju.color.setHex(w.h);
-                    updateHud();
-                    panelKarakter();
+                    simpan.pakai[katAktif] = i;
+                    terapkanTampilan(manusiaP, tampilanSaatIni());
+                    updateHud(); panelKarakter();
                 });
                 box.appendChild(b);
             });
@@ -955,7 +1109,8 @@
     $('btn-menu').addEventListener('click', () => { if (menuTombol.classList.contains('buka')) menuTombol.classList.remove('buka'); else menuTombol.classList.add('buka'); });
     menuTombol.addEventListener('click', () => menuTombol.classList.remove('buka'));
     $('btn-kamera').addEventListener('click', () => { kameraYaw = putar + Math.PI; kameraPitch = 0.6; kameraJarak = 15.8; });
-    $('btn-titik').addEventListener('click', () => { player.position.set(0, 0, 9); vx = 0; vz = 0; });
+    $('btn-titik').addEventListener('click', () => { player.position.set(14, 0, -36); vx = 0; vz = 0; });
+    $('btn-taman').addEventListener('click', () => { player.position.set(0, 0, 9); vx = 0; vz = 0; });
 
     function muatTerbaru() {
         const pergi = () => location.replace(location.pathname + '?v=' + Date.now());
@@ -976,7 +1131,7 @@
             const tombol = (teks, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-opsi'; b.textContent = teks; b.addEventListener('click', fn); box.appendChild(b); return b; };
             info('Versi game: ' + VERSI + '. Progres (skor, koin, misi, tingkat, warna baju) tersimpan OTOMATIS di browser ini, jadi tidak perlu menekan tombol simpan. Cukup tutup halamannya, lanjutkan kapan saja.');
             tombol('▶️ Lanjutkan bermain', tutupPanel);
-            tombol('📍 Kembali ke taman (titik awal)', () => { player.position.set(0, 0, 9); vx = 0; vz = 0; tutupPanel(); });
+            tombol('📍 Kembali ke gapura (titik awal)', () => { player.position.set(14, 0, -36); vx = 0; vz = 0; tutupPanel(); });
             tombol('🔄 Muat ulang versi terbaru (jika tampilan masih lama)', muatTerbaru);
             const hapus = tombol('🗑️ Hapus progres & mulai dari awal', () => {
                 if (!hapus.dataset.yakin) { hapus.dataset.yakin = '1'; hapus.textContent = '⚠️ Yakin? Ketuk sekali lagi untuk menghapus semua progres'; return; }
@@ -1198,6 +1353,7 @@
     const PERCEPATAN = 9;      // makin besar = makin responsif
     const PERLAMBATAN = 11;    // makin besar = berhenti makin cepat
     let vx = 0, vz = 0;        // kecepatan saat ini (dihaluskan)
+    let yLompat = 0, vyLompat = 0;   // lompat
     let putar = 0, jalanT = 0, napasT = 0;
     let kameraSiap = false;
     let kameraYaw = 0, kameraPitch = 0.6, kameraJarak = 15.8;    // kamera mengorbit karakter (360°)
@@ -1265,7 +1421,13 @@
         badanAtas.rotation.x += (0.12 * rasio - badanAtas.rotation.x) * Math.min(1, dt * 8); // condong ke depan
         badanAtas.rotation.y = Math.sin(jalanT) * 0.12 * rasio;                                // sedikit memutar badan
         kepala.rotation.x = -badanAtas.rotation.x * 0.8;                                       // pandangan tetap lurus
-        player.position.y = Math.abs(Math.sin(jalanT)) * 0.09 * rasio;                         // langkah naik-turun
+        const mintaLompat = !isKuisOpen && (keys[' '] || lompatSentuh);                          // lompat ala Roblox (Spasi / tombol LOMPAT)
+        if (mintaLompat && yLompat <= 0.001 && vyLompat <= 0) { vyLompat = 13; bunyi([[420, 0.07], [640, 0.1]]); }
+        vyLompat -= 34 * dt; yLompat += vyLompat * dt;
+        if (yLompat <= 0) { yLompat = 0; vyLompat = 0; }
+        const diUdara = yLompat > 0.02;
+        player.position.y = yLompat + (diUdara ? 0 : Math.abs(Math.sin(jalanT)) * 0.09 * rasio);
+        if (diUdara) { kakiKiri.rotation.x = 0.5; kakiKanan.rotation.x = -0.35; lenganKiri.rotation.x = -2.4; lenganKanan.rotation.x = -2.4; }
         badanAtas.scale.y = 1 + Math.sin(napasT) * 0.012 * (1 - rasio);                        // bernapas saat diam
 
         // Kamera orbit 360° mengelilingi karakter
@@ -1306,8 +1468,7 @@
                 updateHud();
             }
         });
-        // NPC menoleh ke pemain
-        npcList.forEach((n) => { n.rotation.y = Math.atan2(player.position.x - n.position.x, player.position.z - n.position.z); });
+        patroliNpc(dt);
 
         // Gedung terdekat
         let terdekat = null, jarakMin = JARAK_MASUK;
@@ -1338,10 +1499,10 @@
     });
 
     // kait untuk Edisi Kelas (multipemain); tidak berpengaruh pada edisi GitHub
-    window.GE3D = { THREE: THREE, scene: scene, player: player, buatManusia: buatManusia, hexBaju: () => bahanBaju.color.getHex(), simpan: simpan, toast: toast, bukaPanel: bukaPanel, menu: menuTombol, onUpdate: [], onSimpan: null };
+    window.GE3D = { THREE: THREE, scene: scene, player: player, buatManusia: buatManusia, buatLabel: buatLabel, terapkanTampilan: terapkanTampilan, tampilan: tampilanSaatIni, hexBaju: () => bahanBaju.color.getHex(), simpan: simpan, toast: toast, bukaPanel: bukaPanel, menu: menuTombol, onUpdate: [], onSimpan: null };
     updateHud();
     if (soalDilewati) toast('⚠️ ' + soalDilewati + ' soal dilewati karena salah format (lihat Console)');
     if (!simpan.kamera) { toast(isTouch ? '👆 Geser layar untuk memutar kamera 360°' : '🖱️ Tahan & geser mouse (atau tombol Q / R) untuk memutar kamera'); simpan.kamera = true; tulis(); }
-    if (!simpan.level) bukaLevel();
+    mulaiAwal();
     loop();
 })();

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Game Edukasi 3D</title>
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
     <canvas id="game-canvas"></canvas>
@@ -25,7 +25,8 @@
         <button id="btn-unggah" class="tombol-hud" type="button">📥 Soal (unggah Excel)</button>
         <button id="btn-level" class="tombol-hud" type="button"></button>
         <button id="btn-suara" class="tombol-hud" type="button"></button>
-        <button id="btn-titik" class="tombol-hud" type="button">📍 Kembali ke taman</button>
+        <button id="btn-titik" class="tombol-hud" type="button">📍 Kembali ke gapura (titik awal)</button>
+        <button id="btn-taman" class="tombol-hud" type="button">⛲ Ke taman air mancur</button>
         <button id="btn-kamera" class="tombol-hud" type="button">🎥 Reset kamera (di belakang karakter)</button>
         <button id="btn-sistem" class="tombol-hud" type="button">⚙️ Pengaturan &amp; reset</button>
         <button id="btn-tentang" class="tombol-hud" type="button">ℹ️ Tentang</button>
@@ -36,6 +37,7 @@
 
     <!-- Joystik bulat untuk layar sentuh (HP / tablet) -->
     <div id="joystick" aria-label="Joystik"><div id="joy-kenop"></div></div>
+    <button id="btn-lompat" type="button" aria-label="Lompat">LOMPAT</button>
 
     <!-- Modal Kuis -->
     <div id="modal-kuis" class="modal-hidden" role="dialog" aria-modal="true" aria-labelledby="kuis-judul">
@@ -65,6 +67,24 @@
                         <button id="btn-selesai" class="btn-aksi" type="button">Kembali ke peta</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profil: nama & jenis karakter -->
+    <div id="modal-profil" class="modal-hidden" role="dialog" aria-modal="true" aria-labelledby="profil-judul">
+        <div class="modal-content">
+            <div class="modal-header"><h2 id="profil-judul">🚀 Mulai petualangan</h2></div>
+            <div class="modal-body">
+                <div id="profil-nama-blok"><p class="level-info">Nama panggilanmu (tampil di atas kepala karakter):</p>
+                    <input id="profil-nama" class="profil-input" maxlength="12" autocomplete="off" placeholder="Nama panggilan"></div>
+                <p class="level-info">Pilih karakter:</p>
+                <div class="profil-pilih">
+                    <button id="pilih-L" type="button" class="btn-opsi profil-kartu">👦<span>Laki-laki</span></button>
+                    <button id="pilih-P" type="button" class="btn-opsi profil-kartu">👧<span>Perempuan</span></button>
+                </div>
+                <p id="profil-err" class="level-info" style="color:#b91c1c"></p>
+                <button id="profil-mulai" class="btn-aksi" type="button">Mulai ▶</button>
             </div>
         </div>
     </div>
@@ -100,7 +120,7 @@
 
     <!-- Pembaca Excel untuk menu Unggah Soal (opsional; tanpa ini tetap bisa CSV) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="data/soal.js?v=5"></script>
-    <script src="main.js?v=5"></script>
+    <script src="data/soal.js?v=6"></script>
+    <script src="main.js?v=6"></script>
 </body>
 </html>
